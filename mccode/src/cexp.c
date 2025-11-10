@@ -116,7 +116,7 @@ exp_compound(int n, ...)
   char *result, *new;
   CExp e;
   va_list ap;
-  char *separator = "";		/* Token separator, initially empty */
+  char *separator = "";		/* Token separator, empty string */
 
   va_start(ap, n);
   result = str_dup("");
@@ -126,7 +126,6 @@ exp_compound(int n, ...)
     new = str_cat(result, separator, e->s, NULL);
     str_free(result);
     result = new;
-    separator = " ";		/* Now use space separator for rest. */
   }
   return mknonvalueexp(result);
 }
