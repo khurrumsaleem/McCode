@@ -459,6 +459,7 @@ struct pointer_to_1d_int_list mask_intersect_list;
 int number_of_faces;
 struct surface_stack_struct **surface_stack_for_each_face;
 struct surface_stack_struct *internal_cut_surface_stack;
+
 };
 
 struct physics_struct
@@ -476,6 +477,14 @@ struct scattering_process_struct *p_scattering_array;
 int has_refraction_info;
 double refraction_scattering_length_density; // [AA^-2]
 double refraction_Qc;
+
+// Numerical integration
+int sampling_points;
+double *cumul_transmission_prob;
+double dist;
+double *cumul_dists;
+double **mus;
+double *total_mus;
 };
 
 union data_transfer_union{
@@ -514,7 +523,7 @@ struct scattering_process_struct
   double *inhomogenous_mu;                 // The different attenuation coefficients that are sampled in the numerical integration
   double *inhomogenous_prob;               // The probability of the process at the different sampled points.
   double *inhomogenous_t;                  // The different times at which mu must be sampled.
-  int sampl_size;                          // Maximum number of samplings performed. If it is -1, no sampling has been done, and the arrays must be malloc'ed.
+  int sampling_points;                          // Maximum number of samplings performed. If it is -1, no sampling has been done, and the arrays must be malloc'ed.
   union data_transfer_union data_transfer; // The way to reach the storage space allocated for this process (see examples in process.comp files)
 
   // probability_for_scattering_functions calculates this probability given k_i and parameters
@@ -537,7 +546,7 @@ void scattering_process_struct_init(struct scattering_process_struct *sps)
   sps->non_isotropic_rot_index = -1;
   sps->needs_cross_section_focus = -1;
   sps->needs_numerical_integration = -1;
-  sps->sampl_size = -1;
+  sps->sampling_points = -1;
 }
 
 

@@ -55,7 +55,15 @@
 
 DEFINE COMPONENT Inhomogenous_incoherent_process
 
-SETTING PARAMETERS(string inhomogenous_function = "", sigma=5.08, f_QE=0, gamma=0, packing_factor=1, unit_cell_volume=13.8, interact_fraction=-1, string init="init")
+SETTING PARAMETERS(string inhomogenous_function = "", 
+                    sigma=5.08, 
+                    f_QE=0, 
+                    gamma=0, 
+                    packing_factor=1, 
+                    unit_cell_volume=13.8,
+                    number_of_sample_points = 20, 
+                    interact_fraction=-1, 
+                    string init="init")
 
 
 /* Neutron parameters: (x,y,z,vx,vy,vz,t,sx,sy,sz,p) */
@@ -200,6 +208,8 @@ INITIALIZE
     This_process.probability_for_scattering_function = &Inhomogenous_incoherent_physics_my;
     This_process.scattering_function = &Inhomogenous_incoherent_physics_scattering;
     This_process.needs_numerical_integration = 1;
+    This_process.sampling_points = number_of_sample_points;
+
 
     // This will be the same for all process's, and can thus be moved to an include.
     sprintf(global_process_element.name,"%s",NAME_CURRENT_COMP);
