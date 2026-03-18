@@ -845,29 +845,33 @@ INITIALIZE
           longest_surface_stack = surfaces_in_this_stack;
         }
       }
-
-      // Allocate sampling arrays in case any processes use numerical sampling
-      Volumes[volume_index]->p_physics->sampling_points = 0;
-      for (process_index = 0; process_index < Volumes[volume_index]->p_physics->number_of_processes; process_index++) {
-        process = &Volumes[volume_index]->p_physics->p_scattering_array[process_index];
-
-        if (process->needs_numerical_integration != 1)
-          continue;
-        // Set the geometry sampling points to the most demanding process.
-        if (Volumes[volume_index]->p_physics->sampling_points < process->sampling_points)
-          Volumes[volume_index]->p_physics->sampling_points = process->sampling_points;
-      }
-      if (Volumes[volume_index]->p_physics->sampling_points > 0) {
-        Volumes[volume_index]->p_physics->cumul_transmission_prob = malloc (sizeof (double) * Volumes[volume_index]->p_physics->sampling_points);
-        Volumes[volume_index]->p_physics->cumul_dists = malloc (sizeof (double) * Volumes[volume_index]->p_physics->sampling_points);
-        Volumes[volume_index]->p_physics->mus = malloc (sizeof (double*) * Volumes[volume_index]->p_physics->number_of_processes);
-        Volumes[volume_index]->p_physics->total_mus = malloc (sizeof (double) * Volumes[volume_index]->p_physics->sampling_points);
-        for (int i = 0; i < Volumes[volume_index]->p_physics->number_of_processes; i++) {
-          Volumes[volume_index]->p_physics->mus[i] = malloc (sizeof (double) * Volumes[volume_index]->p_physics->sampling_points);
-        }
-      }
     }
   } // Initialization for each volume done
+
+  // =========================================================================
+  // Loop over all physics structs, and assign arrays and values
+  // relevant to line integral approach
+  // =========================================================================
+
+  for (int mat_idx = 0; mat_idx < global_material_list_master->num_elements; mat_idx++) {
+    struct physics_struct* physics = global_material_list_master->elements[mat_idx].physics;
+    for (int proc_idx = 0; proc_idx < physics->number_of_processes; proc_idx++) {
+      struct scattering_process_struct spec_process = physics->p_scattering_array[proc_idx];
+      if (spec_process.needs_numerical_integration != 1)
+        continue;
+      if (physics->sampling_points < spec_process.sampling_points)
+        physics->sampling_points = spec_process.sampling_points;
+    }
+    if (physics->sampling_points > 0) {
+      physics->cumul_transmission_prob = malloc (sizeof (double) * physics->sampling_points);
+      physics->cumul_dists = malloc (sizeof (double) * physics->sampling_points);
+      physics->mus = malloc (sizeof (double*) * physics->number_of_processes);
+      physics->total_mus = malloc (sizeof (double) * physics->sampling_points);
+      for (int i = 0; i < physics->number_of_processes; i++) {
+        physics->mus[i] = malloc (sizeof (double) * physics->sampling_points);
+      }
+    }
+  }
 
   // ------- Initialization of ray-tracing algorithm ------------------------------------
 
@@ -1809,7 +1813,8 @@ TRACE
 
               // printf("dist i = %g\tdist=%g\n", dist_i, dist);
               double sampled_dist
-                  = safety_distance - log (1.0 - rand01 () * (1.0 - exp (-fysik->total_mus[selected_sampling]))) / fysik->total_mus[selected_sampling] * fysik->dist;
+                  = safety_distance
+                    - log (1.0 - rand01 () * (1.0 - exp (-fysik->total_mus[selected_sampling]))) / fysik->total_mus[selected_sampling] * fysik->dist;
               length_to_scattering = fysik->cumul_dists[selected_sampling] - fysik->dist / 2 + sampled_dist;
             }
             // Select process
