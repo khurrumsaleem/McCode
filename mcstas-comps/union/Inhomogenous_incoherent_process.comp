@@ -227,13 +227,11 @@ te_variable vars[] = {
     {"vz", Inhomogenous_storage.particle[5]},
     {"t", Inhomogenous_storage.particle[6]}};
 
-printf("\npart_pointer=%p\n", Inhomogenous_storage.particle[2]);
 
 int err;
 /* Compile the expression with variables. */
 if (strcmp(sigma_expr, ""))
 {
-    printf("\n%s\n", sigma_expr);
     te_expr *sigma_expression = te_compile(sigma_expr, vars, 7, &err);
     if (!sigma_expression)
     {
